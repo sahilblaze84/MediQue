@@ -1,78 +1,87 @@
-# MediQueue AI -智能医院分诊与预约管理系统
+# MediQueue AI — Smart Hospital Triage & Appointment Management System
 
 AI-Powered Hospital Triage and Appointment Management System
 
-**支持联合国可持续发展目标第3项 (SDG 3) - 良好健康与福祉**
+**Supporting UN Sustainable Development Goal 3 (SDG 3) — Good Health and Well-Being**
 
-## 🌟 项目概述
+---
 
-MediQueue AI 是一个基于人工智能的医院分诊和预约管理系统，通过AI分析患者症状，自动推荐合适的科室、分配优先级，并优化预约流程，减少等待时间，提高医院运营效率。
+## 🌟 Project Overview
 
-### 核心功能
+MediQueue AI is an AI-powered hospital triage and appointment management system. It uses AI to analyze patient symptoms, automatically recommends the appropriate department, assigns priority levels, and optimizes the appointment booking process — reducing wait times and improving hospital efficiency.
 
-- **AI症状分析**: 使用 OpenAI/Gemini AI 分析患者症状，推荐科室和优先级
-- **智能分诊**: 根据症状严重程度自动分配优先级（紧急、高、中、低）
-- **预约管理**: 自动匹配可用医生，预约最早可用时段
-- **自动化工作流**: 通过 n8n 自动化整个流程
-- **通知系统**: 自动发送邮件和短信确认及提醒
-- **医生门户**: 医生可查看预约和AI生成的患者摘要
+### Core Features
 
-## 🏗️ 技术架构
+- **AI Symptom Analysis**: Uses Google Gemini AI (free) to analyze patient symptoms, recommend departments, and assign priority
+- **Smart Triage**: Automatically assigns priority (Emergency, High, Medium, Low) based on symptom severity
+- **Appointment Management**: Automatically matches available doctors and books the earliest available slot
+- **Automated Workflow**: Automates the entire triage-to-booking process using n8n
+- **Notification System**: Sends automatic email and SMS confirmations and reminders
+- **Doctor Portal**: Doctors can view appointments and AI-generated patient summaries
 
-### 后端
-- **框架**: Express.js
-- **数据库**: SQLite
-- **AI服务**: OpenAI API (GPT-3.5-turbo)
-- **通知**: Nodemailer (邮件), Twilio (短信)
+---
 
-### 前端
-- **框架**: React + Vite
-- **样式**: TailwindCSS
-- **图标**: Lucide React
-- **路由**: React Router DOM
+## 🏗️ Tech Stack
 
-### 自动化
-- **工作流引擎**: n8n
-- **功能**: 自动化预约流程、通知发送、数据存储
+### Backend
+- **Framework**: Express.js
+- **Database**: SQLite
+- **AI Service**: Google Gemini API (free) with rule-based fallback
+- **Notifications**: Nodemailer (email), Twilio (SMS)
+- **Process Manager**: PM2
 
-## 📋 系统要求
+### Frontend
+- **Framework**: React + Vite
+- **Styling**: TailwindCSS
+- **Icons**: Lucide React
+- **Routing**: React Router DOM
+
+### Automation
+- **Workflow Engine**: n8n
+- **Features**: Automated appointment flow, notification delivery, data storage
+
+---
+
+## 📋 Requirements
 
 - Node.js >= 16.0.0
 - npm >= 8.0.0
-- OpenAI API Key
-- (可选) Gmail App Password (用于邮件通知)
-- (可选) Twilio Account (用于短信通知)
-- n8n (用于自动化工作流)
+- Google Gemini API Key (free — no credit card required)
+- (Optional) Gmail App Password (for email notifications)
+- (Optional) Twilio Account (for SMS notifications)
+- (Optional) n8n (for automated workflows)
 
-## 🚀 快速开始
+---
 
-### 1. 克隆项目
+## 🚀 Quick Start
+
+### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/sahilblaze84/MediQue.git
 cd MediQue
 ```
 
-### 2. 后端设置
+### 2. Backend Setup
 
 ```bash
 cd backend
 npm install
 ```
 
-#### 配置环境变量
+#### Configure Environment Variables
 
-复制 `.env.example` 为 `.env` 并配置：
+Copy `.env.example` to `.env` and fill in your values:
 
 ```bash
 cp .env.example .env
 ```
 
-编辑 `.env` 文件：
+Edit the `.env` file:
 
 ```env
 PORT=5000
-OPENAI_API_KEY=your_openai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 DATABASE_PATH=./database/medique.db
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
@@ -81,187 +90,243 @@ EMAIL_PASSWORD=your_app_password
 TWILIO_ACCOUNT_SID=your_twilio_account_sid
 TWILIO_AUTH_TOKEN=your_twilio_auth_token
 TWILIO_PHONE_NUMBER=your_twilio_phone_number
+
+# Keep-Alive (prevents server from sleeping on free hosting)
+KEEP_ALIVE=true
+PING_INTERVAL_MINUTES=10
+SERVER_URL=http://localhost:5000
 ```
 
-#### 初始化数据库
+#### Initialize the Database
 
 ```bash
 npm run init-db
 ```
 
-#### 启动后端服务
+#### Start the Backend Server
 
 ```bash
 npm run dev
 ```
 
-后端将在 http://localhost:5000 运行
+Backend will run at: `http://localhost:5000`
 
-### 3. 前端设置
+---
+
+### 3. Frontend Setup
 
 ```bash
 cd frontend
 npm install
-```
-
-#### 启动前端服务
-
-```bash
 npm run dev
 ```
 
-前端将在 http://localhost:3000 运行
+Frontend will run at: `http://localhost:3000`
 
-### 4. n8n 工作流设置（可选）
+---
 
-#### 安装 n8n
+### 4. n8n Workflow Setup (Optional)
+
+#### Install n8n
 
 ```bash
 npm install -g n8n
 n8n start
 ```
 
-#### 导入工作流
+#### Import the Workflow
 
-1. 打开 n8n 界面 (http://localhost:5678)
-2. 点击 "Import from File"
-3. 选择项目根目录的 `n8n-workflow.json`
-4. 配置所需的凭据（SMTP, Twilio, SQLite）
-5. 激活工作流
+1. Open n8n at `http://localhost:5678`
+2. Click **"Import from File"**
+3. Select `n8n-workflow.json` from the project root
+4. Configure credentials (SMTP, Twilio, SQLite)
+5. Activate the workflow
 
-详细配置说明请参考 [n8n工作流指南](./n8n-workflow-guide.md)
+See [n8n-workflow-guide.md](./n8n-workflow-guide.md) for detailed setup instructions.
 
-## 📁 项目结构
+---
+
+## 📁 Project Structure
 
 ```
 MediQue/
+├── api/
+│   └── index.js               # Vercel serverless entrypoint
 ├── backend/
 │   ├── database/
-│   │   ├── db.js              # 数据库连接
-│   │   └── init.js            # 数据库初始化
+│   │   ├── db.js              # Database connection
+│   │   └── init.js            # Database initialization
+│   ├── middleware/
+│   │   ├── errorHandler.js    # Error handling middleware
+│   │   ├── logger.js          # Request logging
+│   │   └── validation.js      # Input validation
 │   ├── routes/
-│   │   ├── appointments.js    # 预约路由
-│   │   ├── departments.js    # 科室路由
-│   │   ├── doctors.js        # 医生路由
-│   │   └── symptoms.js       # 症状分析路由
+│   │   ├── appointments.js    # Appointment routes
+│   │   ├── departments.js     # Department routes
+│   │   ├── doctors.js         # Doctor routes
+│   │   ├── patients.js        # Patient routes
+│   │   └── symptoms.js        # Symptom analysis routes
 │   ├── services/
-│   │   ├── aiService.js      # AI分析服务
-│   │   └── notificationService.js  # 通知服务
-│   ├── .env.example          # 环境变量示例
-│   ├── package.json          # 后端依赖
-│   └── server.js             # 服务器入口
+│   │   ├── aiService.js       # AI analysis service (Gemini + fallback)
+│   │   ├── keepAlive.js       # 24/7 server keep-alive service
+│   │   ├── notificationService.js  # Email/SMS notifications
+│   │   └── tunnelManager.js   # Persistent tunnel manager
+│   ├── utils/
+│   │   └── database.js        # Database utility helpers
+│   ├── ecosystem.config.js    # PM2 configuration
+│   ├── .env.example           # Environment variable template
+│   ├── package.json           # Backend dependencies
+│   └── server.js              # Server entry point
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── AppointmentBooking.jsx  # 预约页面
-│   │   │   ├── DoctorDashboard.jsx     # 医生门户
-│   │   │   ├── Home.jsx               # 首页
-│   │   │   ├── Navbar.jsx             # 导航栏
-│   │   │   └── SymptomForm.jsx        # 症状表单
-│   │   ├── App.jsx            # 主应用组件
-│   │   ├── main.jsx           # 入口文件
-│   │   └── index.css          # 全局样式
-│   ├── index.html             # HTML模板
-│   ├── package.json           # 前端依赖
-│   ├── tailwind.config.js     # Tailwind配置
-│   └── vite.config.js         # Vite配置
-├── n8n-workflow.json          # n8n工作流配置
-├── n8n-workflow-guide.md      # n8n配置指南
-└── README.md                  # 项目文档
+│   │   │   ├── AppointmentBooking.jsx  # Appointment booking page
+│   │   │   ├── BookingConfirmation.jsx # Booking confirmation page
+│   │   │   ├── DoctorDashboard.jsx     # Doctor portal
+│   │   │   ├── Home.jsx               # Home page
+│   │   │   ├── Navbar.jsx             # Navigation bar
+│   │   │   └── SymptomForm.jsx        # Symptom submission form
+│   │   ├── App.jsx            # Root application component
+│   │   ├── main.jsx           # Application entry point
+│   │   └── index.css          # Global styles
+│   ├── index.html             # HTML template
+│   ├── package.json           # Frontend dependencies
+│   ├── tailwind.config.js     # Tailwind CSS configuration
+│   └── vite.config.js         # Vite configuration
+├── vercel.json                # Vercel deployment configuration
+├── n8n-workflow.json          # n8n workflow configuration
+├── n8n-workflow-guide.md      # n8n setup guide
+└── README.md                  # Project documentation
 ```
 
-## 🔌 API 端点
+---
 
-### 症状分析
-- `POST /api/symptoms/analyze` - 分析症状并获取科室推荐
-- `GET /api/symptoms/history/:patientId` - 获取患者症状历史
+## 🔌 API Endpoints
 
-### 预约管理
-- `POST /api/appointments` - 创建预约
-- `GET /api/appointments` - 获取所有预约
-- `GET /api/appointments/:id` - 获取特定预约
-- `PATCH /api/appointments/:id/status` - 更新预约状态
-- `GET /api/appointments/available/slots` - 获取可用时段
+### Symptom Analysis
+- `POST /api/symptoms/analyze` — Analyze symptoms and get department recommendation
+- `GET /api/symptoms/history/:patientId` — Get patient symptom history
 
-### 科室管理
-- `GET /api/departments` - 获取所有科室
-- `GET /api/departments/:id` - 获取特定科室
-- `GET /api/departments/:id/doctors` - 获取科室下的医生
+### Appointment Management
+- `POST /api/appointments` — Create appointment
+- `GET /api/appointments` — Get all appointments
+- `GET /api/appointments/:id` — Get specific appointment
+- `PATCH /api/appointments/:id/status` — Update appointment status
+- `GET /api/appointments/available/slots` — Get available time slots
 
-### 医生管理
-- `GET /api/doctors` - 获取所有医生
-- `GET /api/doctors/:id` - 获取特定医生
-- `POST /api/doctors` - 创建医生
-- `GET /api/doctors/:id/appointments` - 获取医生的预约
+### Department Management
+- `GET /api/departments` — Get all departments
+- `GET /api/departments/:id` — Get specific department
+- `GET /api/departments/:id/doctors` — Get doctors in a department
 
-## 🎯 使用流程
+### Doctor Management
+- `GET /api/doctors` — Get all doctors
+- `GET /api/doctors/:id` — Get specific doctor
+- `POST /api/doctors` — Create a doctor profile
+- `GET /api/doctors/:id/appointments` — Get doctor's appointments
 
-### 患者流程
+### Health Check
+- `GET /api/health` — Server health check (used for keep-alive monitoring)
 
-1. **症状提交**
-   - 访问首页，点击"开始症状检查"
-   - 填写个人信息
-   - 选择症状（可从常见症状中选择或自定义）
-   - 选择严重程度和持续时间
-   - 提交进行AI分析
+---
 
-2. **查看分析结果**
-   - AI推荐科室
-   - 优先级分配
-   - AI生成的医生摘要
-   - 建议行动
+## 🎯 User Flow
 
-3. **预约预约**
-   - 系统自动推荐科室
-   - 选择医生
-   - 选择日期和时间
-   - 确认预约
+### Patient Flow
 
-4. **接收通知**
-   - 预约确认邮件和短信
-   - 预约前24小时提醒
+1. **Submit Symptoms**
+   - Visit the home page and click "Start Symptom Check"
+   - Fill in personal information
+   - Select symptoms (from common list or enter custom)
+   - Set severity and duration
+   - Submit for AI analysis
 
-### 医生流程
+2. **View Analysis Results**
+   - AI-recommended department
+   - Assigned priority level
+   - AI-generated doctor summary
+   - Recommended action
 
-1. **访问医生门户**
-   - 查看所有预约
-   - 按状态和优先级筛选
-   - 搜索患者
+3. **Book Appointment**
+   - System recommends the right department
+   - Select a doctor
+   - Choose date and time
+   - Confirm appointment
 
-2. **管理预约**
-   - 确认预约
-   - 完成预约
-   - 取消预约
+4. **Receive Notifications**
+   - Confirmation email and SMS
+   - Reminder 24 hours before appointment
 
-3. **查看患者信息**
-   - AI生成的患者摘要
-   - 症状详情
-   - 联系信息
+### Doctor Flow
 
-## 🔒 安全注意事项
+1. **Access Doctor Portal**
+   - View all appointments
+   - Filter by status and priority
+   - Search patients
 
-⚠️ **重要免责声明**
+2. **Manage Appointments**
+   - Confirm appointments
+   - Mark as completed
+   - Cancel appointments
 
-- 本系统仅用于分诊和预约管理，**不进行疾病诊断或治疗建议**
-- AI分析仅供参考，不能替代专业医疗诊断
-- 紧急情况请立即拨打急救电话或前往急诊科
-- 所有医疗决策应由专业医护人员做出
+3. **View Patient Information**
+   - AI-generated patient summary
+   - Symptom details
+   - Contact information
 
-### 数据安全
+---
 
-- 患者数据存储在本地SQLite数据库
-- 建议在生产环境使用加密数据库
-- 实施适当的访问控制和身份验证
-- 遵守当地医疗数据隐私法规（如HIPAA、GDPR）
+## ☁️ Deployment
 
-## 🧪 测试
+### Vercel (Recommended)
 
-### 测试AI分析（无需API Key）
-
-系统包含基于规则的备用分析系统，即使没有OpenAI API Key也能运行：
+The app is pre-configured for one-click Vercel deployment:
 
 ```bash
-# 测试症状分析端点
+npx vercel
+```
+
+Or connect your GitHub repository on [vercel.com](https://vercel.com) and deploy automatically on every push.
+
+**Environment variables to set in Vercel Dashboard:**
+- `GEMINI_API_KEY` — Your free Google Gemini API key
+- `NODE_ENV` — `production`
+
+### Keep Server Active 24/7
+
+Use [UptimeRobot](https://uptimerobot.com) (free) to ping your deployed app every 5 minutes and keep it always active:
+
+- Monitor URL: `https://your-app.vercel.app/api/health`
+- Monitor type: `HTTP(s)`
+- Interval: `5 minutes`
+
+---
+
+## 🔒 Security Notice
+
+> ⚠️ **Important Disclaimer**
+>
+> - This system is for **triage and appointment management only** — it does NOT provide medical diagnosis or treatment advice
+> - AI analysis is for guidance only and cannot replace professional medical consultation
+> - In emergencies, call emergency services or go directly to the Emergency Department
+> - All medical decisions must be made by qualified healthcare professionals
+
+### Data Security
+
+- Patient data is stored locally in an SQLite database
+- Use an encrypted database in production
+- Implement proper access control and authentication
+- Comply with applicable healthcare data privacy regulations (HIPAA, GDPR, etc.)
+
+---
+
+## 🧪 Testing
+
+### Test AI Analysis (No API Key Required)
+
+The system includes a built-in rule-based fallback that works without any AI key:
+
+```bash
 curl -X POST http://localhost:5000/api/symptoms/analyze \
   -H "Content-Type: application/json" \
   -d '{
@@ -271,7 +336,7 @@ curl -X POST http://localhost:5000/api/symptoms/analyze \
   }'
 ```
 
-### 测试预约创建
+### Test Appointment Creation
 
 ```bash
 curl -X POST http://localhost:5000/api/appointments \
@@ -288,132 +353,115 @@ curl -X POST http://localhost:5000/api/appointments \
   }'
 ```
 
-## 🛠️ 开发指南
+---
 
-### 添加新的科室
-
-编辑 `backend/database/init.js`，在 `insertDefaultDepartments` 函数中添加：
-
-```javascript
-{ name: 'New Department', description: 'Department description' }
-```
-
-### 自定义AI提示词
-
-编辑 `backend/services/aiService.js` 中的 `analyzeSymptoms` 函数，修改 `prompt` 变量。
-
-### 添加新的优先级规则
-
-编辑 `backend/services/aiService.js` 中的 `fallbackAnalysis` 函数。
-
-### 自定义前端样式
-
-编辑 `frontend/tailwind.config.js` 添加自定义颜色和主题。
-
-## 📊 数据库模式
+## 📊 Database Schema
 
 ### departments
-- id (INTEGER, PRIMARY KEY)
-- name (TEXT, UNIQUE)
-- description (TEXT)
-- created_at (TIMESTAMP)
+| Column | Type |
+|---|---|
+| id | INTEGER PRIMARY KEY |
+| name | TEXT UNIQUE |
+| description | TEXT |
+| created_at | TIMESTAMP |
 
 ### doctors
-- id (INTEGER, PRIMARY KEY)
-- name (TEXT)
-- email (TEXT, UNIQUE)
-- phone (TEXT)
-- department_id (INTEGER, FOREIGN KEY)
-- specialization (TEXT)
-- available_from (TEXT)
-- available_to (TEXT)
-- created_at (TIMESTAMP)
+| Column | Type |
+|---|---|
+| id | INTEGER PRIMARY KEY |
+| name | TEXT |
+| email | TEXT UNIQUE |
+| phone | TEXT |
+| department_id | INTEGER (FK) |
+| specialization | TEXT |
+| available_from | TEXT |
+| available_to | TEXT |
+| created_at | TIMESTAMP |
 
 ### patients
-- id (INTEGER, PRIMARY KEY)
-- name (TEXT)
-- email (TEXT)
-- phone (TEXT)
-- date_of_birth (TEXT)
-- created_at (TIMESTAMP)
+| Column | Type |
+|---|---|
+| id | INTEGER PRIMARY KEY |
+| name | TEXT |
+| email | TEXT |
+| phone | TEXT |
+| date_of_birth | TEXT |
+| created_at | TIMESTAMP |
 
 ### appointments
-- id (INTEGER, PRIMARY KEY)
-- patient_id (INTEGER, FOREIGN KEY)
-- doctor_id (INTEGER, FOREIGN KEY)
-- department_id (INTEGER, FOREIGN KEY)
-- appointment_date (TEXT)
-- appointment_time (TEXT)
-- priority_level (TEXT)
-- status (TEXT)
-- symptoms_summary (TEXT)
-- ai_summary (TEXT)
-- created_at (TIMESTAMP)
-
-### symptom_submissions
-- id (INTEGER, PRIMARY KEY)
-- patient_id (INTEGER, FOREIGN KEY)
-- symptoms (TEXT)
-- severity (TEXT)
-- duration (TEXT)
-- suggested_department (TEXT)
-- priority_level (TEXT)
-- ai_summary (TEXT)
-- created_at (TIMESTAMP)
-
-## 🌍 环境变量说明
-
-| 变量名 | 说明 | 必需 |
-|--------|------|------|
-| PORT | 后端服务端口 | 否 |
-| OPENAI_API_KEY | OpenAI API密钥 | 是（用于AI分析） |
-| DATABASE_PATH | SQLite数据库路径 | 否 |
-| EMAIL_HOST | SMTP服务器地址 | 否 |
-| EMAIL_PORT | SMTP端口 | 否 |
-| EMAIL_USER | 邮箱用户名 | 否 |
-| EMAIL_PASSWORD | 邮箱密码/应用密码 | 否 |
-| TWILIO_ACCOUNT_SID | Twilio账户SID | 否 |
-| TWILIO_AUTH_TOKEN | Twilio认证令牌 | 否 |
-| TWILIO_PHONE_NUMBER | Twilio电话号码 | 否 |
-
-## 🤝 贡献指南
-
-欢迎贡献！请遵循以下步骤：
-
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## 📝 许可证
-
-本项目采用 MIT 许可证 - 详见 LICENSE 文件
-
-## 🙏 致谢
-
-- OpenAI - 提供AI分析能力
-- n8n - 提供工作流自动化
-- React - 前端框架
-- Express.js - 后端框架
-- TailwindCSS - 样式框架
-
-## 📞 联系方式
-
-如有问题或建议，请通过以下方式联系：
-
-- 创建 Issue
-- 发送邮件至项目维护者
-
-## 🎯 SDG 3 - 良好健康与福祉
-
-本项目直接支持联合国可持续发展目标第3项：
-
-- **减少等待时间**: 通过智能分诊优化患者流程
-- **提高医疗可及性**: 简化预约流程
-- **优化资源利用**: 帮助医院更有效地管理资源
-- **改善患者体验**: 提供透明、高效的服务
+| Column | Type |
+|---|---|
+| id | INTEGER PRIMARY KEY |
+| patient_id | INTEGER (FK) |
+| doctor_id | INTEGER (FK) |
+| department_id | INTEGER (FK) |
+| appointment_date | TEXT |
+| appointment_time | TEXT |
+| priority_level | TEXT |
+| status | TEXT |
+| symptoms_summary | TEXT |
+| ai_summary | TEXT |
+| created_at | TIMESTAMP |
 
 ---
 
-**注意**: 本系统仅用于演示和教育目的。在生产环境中使用前，请确保符合所有适用的医疗法规和标准。
+## 🌍 Environment Variables
+
+| Variable | Description | Required |
+|---|---|---|
+| `PORT` | Backend server port (default: 5000) | No |
+| `GEMINI_API_KEY` | Google Gemini AI API key (free) | Yes (for AI features) |
+| `DATABASE_PATH` | SQLite database file path | No |
+| `EMAIL_HOST` | SMTP server hostname | No |
+| `EMAIL_PORT` | SMTP server port | No |
+| `EMAIL_USER` | Email account username | No |
+| `EMAIL_PASSWORD` | Email app password | No |
+| `TWILIO_ACCOUNT_SID` | Twilio Account SID | No |
+| `TWILIO_AUTH_TOKEN` | Twilio Auth Token | No |
+| `TWILIO_PHONE_NUMBER` | Twilio phone number | No |
+| `KEEP_ALIVE` | Enable self-ping keep-alive (true/false) | No |
+| `PING_INTERVAL_MINUTES` | Keep-alive ping interval in minutes | No |
+| `SERVER_URL` | Public server URL for keep-alive pings | No |
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License — see the LICENSE file for details.
+
+---
+
+## 🙏 Acknowledgements
+
+- **Google Gemini** — Free AI analysis capability
+- **n8n** — Workflow automation
+- **React** — Frontend framework
+- **Express.js** — Backend framework
+- **TailwindCSS** — Styling framework
+
+---
+
+## 🎯 SDG 3 — Good Health and Well-Being
+
+This project directly supports UN Sustainable Development Goal 3:
+
+- **Reduce wait times**: Optimize patient flow through smart triage
+- **Improve healthcare access**: Simplify the appointment booking process
+- **Optimize resource use**: Help hospitals manage resources more effectively
+- **Enhance patient experience**: Provide transparent and efficient service
+
+---
+
+> **Note**: This system is intended for demonstration and educational purposes. Before using in a production environment, ensure compliance with all applicable medical regulations and standards.
