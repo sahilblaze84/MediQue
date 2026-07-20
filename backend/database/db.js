@@ -16,7 +16,9 @@ let db = noopDb;
 try {
   const mod = 'sqlite' + '3';
   const sqlite3 = require(mod).verbose();
-  const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'medique.db');
+  
+  // On Vercel, the file system is read-only except for /tmp
+  const dbPath = process.env.VERCEL ? '/tmp/medique.db' : (process.env.DATABASE_PATH || path.join(__dirname, 'medique.db'));
   const dbDir = path.dirname(dbPath);
 
   if (!fs.existsSync(dbDir)) {
@@ -28,7 +30,7 @@ try {
       console.error('[DB] Error opening database — using no-op stub:', err.message);
       db = noopDb;
     } else {
-      console.log('[DB] Connected to SQLite database');
+      console.log(`[DB] Connected to SQLite database at ${dbPath}`);
     }
   });
 
@@ -41,4 +43,13 @@ try {
   db = noopDb;
 }
 
-module.exports = db;
+// Export a proxy object so that if `db` is reassigned to `noopDb` asynchronously,
+// consumers calling db.run/get/all will use the updated reference.
+module.exports = {
+  all: (...args) => db.all(...args),
+  get: (...args) => db.get(...args),
+  run: (...args) => db.run(...args),
+  prepare: (...args) => db.prepare(...args),
+  on: (...args) => db.on(...args),
+  close: (...args) => db.close(...args)
+};
