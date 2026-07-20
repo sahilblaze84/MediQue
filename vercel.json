@@ -1,8 +1,15 @@
 {
   "version": 2,
   "buildCommand": "cd frontend && npm install && npm run build",
-  "installCommand": "cd backend && npm install && cd ../frontend && npm install",
+  "installCommand": "cd backend && npm install",
   "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.js": {
+      "memory": 512,
+      "maxDuration": 30,
+      "excludeFiles": "backend/database/*.db,backend/node_modules/sqlite3/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -11,6 +18,12 @@
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/health",
+      "schedule": "*/10 * * * *"
     }
   ]
 }

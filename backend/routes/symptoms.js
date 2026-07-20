@@ -12,20 +12,26 @@ router.post('/analyze', validateSymptomAnalysis, asyncHandler(async (req, res) =
   // Get AI analysis
   const analysis = await aiService.analyzeSymptoms(symptoms, severity, duration);
 
-  // Store symptom submission
-  const result = await run(
-    `INSERT INTO symptom_submissions (patient_id, symptoms, severity, duration, suggested_department, priority_level, ai_summary)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [
-      patientInfo?.id || null,
-      JSON.stringify(symptoms),
-      severity || 'moderate',
-      duration || 'unknown',
-      analysis.department,
-      analysis.priority,
-      analysis.summary
-    ]
-  );
+  let submissionId = null;
+  try {
+    // Store symptom submission
+    const result = await run(
+      `INSERT INTO symptom_submissions (patient_id, symptoms, severity, duration, suggested_department, priority_level, ai_summary)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        patientInfo?.id || null,
+        JSON.stringify(symptoms),
+        severity || 'moderate',
+        duration || 'unknown',
+        analysis.department,
+        analysis.priority,
+        analysis.summary
+      ]
+    );
+    submissionId = result.id;
+  } catch (error) {
+    console.warn('[DB] Failed to store symptom submission, continuing anyway:', error.message);
+  }
 
   res.json({
     success: true,
@@ -35,7 +41,7 @@ router.post('/analyze', validateSymptomAnalysis, asyncHandler(async (req, res) =
       summary: analysis.summary,
       recommendedAction: analysis.recommendedAction
     },
-    submissionId: result.id
+    submissionId: submissionId
   });
 }));
 
