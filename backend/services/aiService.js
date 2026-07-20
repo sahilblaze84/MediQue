@@ -1,8 +1,9 @@
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let genAI = null;
+if (process.env.GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+}
 
 /**
  * Analyze symptoms and provide department recommendation, priority level, and summary
@@ -12,9 +13,14 @@ const openai = new OpenAI({
  * @returns {Object} Analysis result with department, priority, and summary
  */
 async function analyzeSymptoms(symptoms, severity, duration) {
+  if (!genAI) {
+    console.log('[AI Service] No GEMINI_API_KEY found — using rule-based fallback.');
+    return fallbackAnalysis(symptoms, severity, duration);
+  }
+
   try {
     const symptomsText = Array.isArray(symptoms) ? symptoms.join(', ') : symptoms;
-    
+
     const prompt = `
 You are a hospital triage AI assistant. Your role is to analyze patient symptoms and recommend the appropriate medical department, priority level, and provide a brief summary for the doctor.
 
@@ -31,7 +37,7 @@ Please analyze this information and provide:
 3. A brief summary (2-3 sentences) for the doctor explaining the patient's condition
 4. Recommended action (brief advice for the patient)
 
-Respond in JSON format with this structure:
+Respond in JSON format ONLY (no explanation, no markdown, just raw JSON):
 {
   "department": "department name",
   "priority": "priority level",
@@ -39,55 +45,26 @@ Respond in JSON format with this structure:
   "recommendedAction": "brief recommended action"
 }
 
-Consider these guidelines:
-- Emergency priority: Chest pain, severe breathing difficulties, severe bleeding, loss of consciousness, sudden severe pain, high fever (>103°F/39.4°C) with stiff neck, severe allergic reactions
-- High priority: High fever (102-103°F/38.9-39.4°C), severe pain, symptoms lasting more than a week, worsening condition, difficulty breathing, persistent vomiting
-- Medium priority: Moderate symptoms, symptoms lasting 3-7 days, manageable discomfort, mild to moderate fever (<102°F/38.9°C)
-- Low priority: Mild symptoms, symptoms lasting less than 3 days, minor discomfort, routine checkups
-
-Department mapping guidelines:
-- Emergency: Life-threatening conditions, severe trauma, chest pain, severe breathing issues
-- Cardiology: Heart-related symptoms, chest pain, palpitations, high blood pressure concerns
-- Neurology: Headaches, dizziness, numbness, seizures, memory issues, stroke symptoms
-- Orthopedics: Bone, joint, muscle pain, fractures, back pain, arthritis
-- Dermatology: Skin rashes, acne, eczema, unusual moles, hair loss
-- ENT: Ear pain, sore throat, sinus issues, hearing problems, tonsillitis
-- Ophthalmology: Eye pain, vision problems, eye infections, glaucoma concerns
-- Pediatrics: Child-specific conditions (patients under 18)
-- Gynecology: Women's health issues, reproductive concerns
-- General Medicine: General health concerns, flu-like symptoms, routine checkups
+Guidelines:
+- Emergency: Chest pain, severe breathing difficulties, severe bleeding, loss of consciousness
+- High: High fever, severe pain, worsening condition
+- Medium: Moderate symptoms lasting 3-7 days
+- Low: Mild symptoms, routine concerns
 `;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are a hospital triage AI assistant. You help route patients to the right department and prioritize cases. You do not diagnose or prescribe treatments. Your responses must be valid JSON only."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 500,
-    });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
 
-    const responseText = completion.choices[0].message.content;
-    
-    // Clean response text to extract JSON
-    const jsonMatch = responseText.match(/\{[^}]+\}/s);
+    // Extract JSON from response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     const cleanJson = jsonMatch ? jsonMatch[0] : responseText;
-    
-    // Parse JSON response
     const analysis = JSON.parse(cleanJson);
-    
-    // Validate the response
+
     if (!analysis.department || !analysis.priority || !analysis.summary) {
       throw new Error('Invalid AI response format');
     }
-    
+
     return {
       department: analysis.department,
       priority: analysis.priority,
@@ -96,9 +73,7 @@ Department mapping guidelines:
     };
 
   } catch (error) {
-    console.error('Error calling OpenAI API:', error);
-    
-    // Fallback to basic rule-based analysis if AI fails
+    console.error('[AI Service] Gemini API error — using rule-based fallback:', error.message);
     return fallbackAnalysis(symptoms, severity, duration);
   }
 }
