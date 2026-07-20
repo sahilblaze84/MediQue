@@ -31,6 +31,10 @@ try {
       db = noopDb;
     } else {
       console.log(`[DB] Connected to SQLite database at ${dbPath}`);
+      if (process.env.VERCEL) {
+        const { initializeDatabase } = require('./init');
+        initializeDatabase(db).catch(e => console.error('[DB] Error initializing DB:', e));
+      }
     }
   });
 
