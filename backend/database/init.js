@@ -176,6 +176,12 @@ const initializeDatabase = async (db) => {
   createIndexes(db);
   insertDefaultDepartments(db);
   insertDefaultDoctors(db);
+  
+  // Insert a default guest patient so direct appointments don't fail foreign key constraints
+  db.serialize(() => {
+    db.run(`INSERT OR IGNORE INTO patients (id, name, email, phone) VALUES (1, 'Guest Patient', 'guest@medique.com', '0000000000')`);
+  });
+
   console.log('[DB] Database tables and default data initialized');
 };
 
