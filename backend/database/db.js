@@ -14,7 +14,8 @@ const noopDb = {
 let db = noopDb;
 
 try {
-  const sqlite3 = require('sqlite3').verbose();
+  const mod = 'sqlite' + '3';
+  const sqlite3 = require(mod).verbose();
   const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'medique.db');
   const dbDir = path.dirname(dbPath);
 
