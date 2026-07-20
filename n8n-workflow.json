@@ -1,0 +1,469 @@
+{
+  "name": "MediQueue AI - Appointment Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "medique-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook - Receive Patient Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "medique-patient-form"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/symptoms/analyze",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify($json)}}",
+        "options": {}
+      },
+      "id": "http-request-1",
+      "name": "AI Symptom Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "MediQueue API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{$json.analysis.priority}}",
+              "rightValue": "Emergency",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-1",
+      "name": "Check Emergency Priority",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/appointments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify({\n  patientId: $json.patientInfo.id || 1,\n  doctorId: $json.recommendedDoctorId,\n  departmentId: $json.recommendedDepartmentId,\n  appointmentDate: $json.preferredDate,\n  appointmentTime: $json.preferredTime,\n  priorityLevel: $json.analysis.priority,\n  symptomsSummary: $json.symptoms.join(', '),\n  aiSummary: $json.analysis.summary\n})}}",
+        "options": {}
+      },
+      "id": "http-request-2",
+      "name": "Book Appointment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "MediQueue API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "={{$json.patientInfo.email}}",
+        "to": "={{$json.patientInfo.email}}",
+        "subject": "Appointment Confirmation - MediQueue AI",
+        "emailType": "html",
+        "message": "=<h2>Appointment Confirmation</h2>\n<p>Dear {{$json.patientInfo.name}},</p>\n<p>Your appointment has been successfully booked.</p>\n<h3>Appointment Details:</h3>\n<ul>\n  <li><strong>Department:</strong> {{$json.analysis.department}}</li>\n  <li><strong>Priority:</strong> {{$json.analysis.priority}}</li>\n  <li><strong>Date:</strong> {{$json.preferredDate}}</li>\n  <li><strong>Time:</strong> {{$json.preferredTime}}</li>\n</ul>\n<h3>AI Summary:</h3>\n<p>{{$json.analysis.summary}}</p>\n<p>Please arrive 15 minutes before your appointment time.</p>\n<p>Thank you,<br>MediQueue AI Team</p>",
+        "options": {}
+      },
+      "id": "email-1",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1050, 200],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "Gmail SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "={{$env.TWILIO_PHONE_NUMBER}}",
+        "to": "={{$json.patientInfo.phone}}",
+        "message": "=MediQueue AI: Your appointment is confirmed for {{$json.preferredDate}} at {{$json.preferredTime}}. Priority: {{$json.analysis.priority}}. Please arrive 15 minutes early.",
+        "options": {}
+      },
+      "id": "twilio-1",
+      "name": "Send SMS Confirmation",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [1050, 350],
+      "credentials": {
+        "twilioApi": {
+          "id": "3",
+          "name": "Twilio Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/doctors/{{$json.recommendedDoctorId}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify({\n  summary: $json.analysis.summary,\n  symptoms: $json.symptoms.join(', '),\n  patientName: $json.patientInfo.name,\n  appointmentDate: $json.preferredDate,\n  appointmentTime: $json.preferredTime,\n  priority: $json.analysis.priority\n})}}",
+        "options": {}
+      },
+      "id": "http-request-3",
+      "name": "Send Summary to Doctor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "MediQueue API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{JSON.stringify({\n  success: true,\n  message: 'Appointment booked successfully',\n  appointmentId: $node['Book Appointment'].json.appointmentId,\n  analysis: $json.analysis\n})}}",
+        "options": {}
+      },
+      "id": "respond-1",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1450, 275]
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "id": "wait-1",
+      "name": "Wait 24 Hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1250, 450],
+      "webhookId": "medique-reminder"
+    },
+    {
+      "parameters": {
+        "from": "={{$json.patientInfo.email}}",
+        "to": "={{$json.patientInfo.email}}",
+        "subject": "Appointment Reminder - MediQueue AI",
+        "emailType": "html",
+        "message": "=<h2>Appointment Reminder</h2>\n<p>Dear {{$json.patientInfo.name}},</p>\n<p>This is a reminder about your upcoming appointment tomorrow.</p>\n<h3>Appointment Details:</h3>\n<ul>\n  <li><strong>Date:</strong> {{$json.preferredDate}}</li>\n  <li><strong>Time:</strong> {{$json.preferredTime}}</li>\n</ul>\n<p>Please arrive 15 minutes before your appointment time.</p>\n<p>Thank you,<br>MediQueue AI Team</p>",
+        "options": {}
+      },
+      "id": "email-2",
+      "name": "Send Reminder Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1450, 450],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "Gmail SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "={{$env.TWILIO_PHONE_NUMBER}}",
+        "to": "={{$json.patientInfo.phone}}",
+        "message": "=MediQueue AI: Reminder - You have an appointment tomorrow at {{$json.preferredTime}}. Please arrive 15 minutes early.",
+        "options": {}
+      },
+      "id": "twilio-2",
+      "name": "Send Reminder SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [1450, 580],
+      "credentials": {
+        "twilioApi": {
+          "id": "3",
+          "name": "Twilio Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-emergency",
+              "leftValue": "={{$json.analysis.priority}}",
+              "rightValue": "Emergency",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-emergency",
+      "name": "Emergency Alert Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "from": "={{$env.ADMIN_EMAIL}}",
+        "to": "={{$env.ADMIN_EMAIL}}",
+        "subject": "EMERGENCY ALERT - High Priority Patient",
+        "emailType": "html",
+        "message": "=<h2>⚠️ EMERGENCY ALERT</h2>\n<p>A high-priority emergency case has been identified:</p>\n<h3>Patient Information:</h3>\n<ul>\n  <li><strong>Name:</strong> {{$json.patientInfo.name}}</li>\n  <li><strong>Phone:</strong> {{$json.patientInfo.phone}}</li>\n  <li><strong>Email:</strong> {{$json.patientInfo.email}}</li>\n</ul>\n<h3>Symptoms:</h3>\n<p>{{$json.symptoms.join(', ')}}</p>\n<h3>AI Analysis:</h3>\n<p>{{$json.analysis.summary}}</p>\n<p><strong>Immediate attention required!</strong></p>",
+        "options": {}
+      },
+      "id": "email-emergency",
+      "name": "Send Emergency Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1050, 500],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "Gmail SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "appointments",
+        "columns": {
+          "mappingMode": "autoMapInputData"
+        },
+        "options": {}
+      },
+      "id": "sqlite-1",
+      "name": "Store in Database",
+      "type": "n8n-nodes-base.sqlite",
+      "typeVersion": 2,
+      "position": [650, 200],
+      "credentials": {
+        "sqlite": {
+          "id": "4",
+          "name": "MediQueue Database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Patient Form": {
+      "main": [
+        [
+          {
+            "node": "AI Symptom Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Symptom Analysis": {
+      "main": [
+        [
+          {
+            "node": "Store in Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store in Database": {
+      "main": [
+        [
+          {
+            "node": "Check Emergency Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Emergency Priority": {
+      "main": [
+        [
+          {
+            "node": "Book Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Emergency Alert Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Appointment": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send SMS Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Confirmation Email": {
+      "main": [
+        [
+          {
+            "node": "Send Summary to Doctor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Summary to Doctor": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait 24 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 Hours": {
+      "main": [
+        [
+          {
+            "node": "Send Reminder Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Reminder SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emergency Alert Check": {
+      "main": [
+        [
+          {
+            "node": "Send Emergency Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Book Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Emergency Alert": {
+      "main": [
+        [
+          {
+            "node": "Book Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
